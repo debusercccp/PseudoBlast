@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genome BLAST - Ricerca Sequenze</title>
+    <style>
+        :root {
+            --color-primary: #2185d0;
+            --color-primary-hover: #1678c2;
+            --color-success: #21a84e;
+            --color-warning: #f5a623;
+            --color-danger: #d32f2f;
+            --color-bg: #f5f5f5;
+            --color-surface: #ffffff;
+            --color-border: #e0e0e0;
+            --color-text: #212121;
+            --color-text-secondary: #666666;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--color-surface);
+            border-bottom: 2px solid var(--color-border);
+            padding: var(--spacing-md);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: var(--spacing-md);
+            list-style: none;
+        }
+
+        .nav-tabs button {
+            background: none;
+            border: none;
+            padding: var(--spacing-sm) var(--spacing-md);
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs button.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .nav-tabs button:hover {
+            color: var(--color-primary);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--spacing-lg);
+        }
+
+        /* Breadcrumbs */
+        .breadcrumbs {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .breadcrumbs a {
+            color: var(--color-primary);
+            text-decoration: none;
+            margin: 0 4px;
+        }
+
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Page sections */
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        /* Form section */
+        .form-card {
+            background-color: var(--color-surface);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-card h2 {
+            margin-bottom: var(--spacing-md);
+            color: var(--color-text);
+            font-size: 20px;
+        }
+
+        .form-card h3 {
+            margin-top: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            color: var(--color-text);
+            font-size: 16px;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: var(--spacing-sm);
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--color-text);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        textarea, input[type="text"], input[type="email"], select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--color-text);
+            background-color: var(--color-surface);
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus, input:focus, select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(33, 133, 208, 0.1);
+        }
+
+        textarea {
+            font-family: 'Courier New', monospace;
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+        }
+
+        button {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(33, 133, 208, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* Results section */
+        .results-container {
+            background-color: var(--color-surface);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .status-message {
+            padding: var(--spacing-md);
+            border-radius: 4px;
+            margin-bottom: var(--spacing-md);
+            font-size: 14px;
+        }
+
+        .status-message.success {
+            background-color: #e8f5e9;
+            color: var(--color-success);
+            border-left: 4px solid var(--color-success);
+        }
+
+        .status-message.error {
+            background-color: #ffebee;
+            color: var(--color-danger);
+            border-left: 4px solid var(--color-danger);
+        }
+
+        .status-message.info {
+            background-color: #e3f2fd;
+            color: var(--color-primary);
+            border-left: 4px solid var(--color-primary);
+        }
+
+        /* Results table */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--spacing-md);
+            font-size: 13px;
+        }
+
+        .results-table thead {
+            background-color: #f9f9f9;
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .results-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .results-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .results-table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .hit-title {
+            color: var(--color-primary);
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .hit-title:hover {
+            text-decoration: underline;
+        }
+
+        /* Score bar */
+        .score-bar {
+            height: 8px;
+            background-color: var(--color-border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 4px 0;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #21a84e, #f5a623, #d32f2f);
+            transition: width 0.3s ease;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--color-text-secondary);
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: var(--spacing-md);
+            opacity: 0.5;
+        }
+
+        /* Recent results */
+        .recent-item {
+            padding: var(--spacing-md);
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            margin-bottom: var(--spacing-sm);
+            border-left: 3px solid var(--color-primary);
+        }
+
+        .recent-item strong {
+            color: var(--color-primary);
+        }
+
+        .recent-item-meta {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--color-surface);
+            border-top: 1px solid var(--color-border);
+            padding: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        footer a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .results-table {
+                font-size: 11px;
+            }
+
+            .results-table th, .results-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">🧬 Genome BLAST</div>
+            <ul class="nav-tabs">
+                <li><button class="nav-btn active" data-page="search">Ricerca</button></li>
+                <li><button class="nav-btn" data-page="results">Risultati Recenti</button></li>
+                <li><button class="nav-btn" data-page="documentation">Documentazione</button></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Breadcrumbs -->
+        <div class="breadcrumbs">
+            <span>Home</span> 
+            <a href="#search">Ricerca BLAST</a>
+            <span id="current-page"></span>
+        </div>
+
+        <!-- Search Page -->
+        <div id="search" class="page-section active">
+            <div class="form-card">
+                <h2>Ricerca BLAST - Allineamento di Sequenze Genomiche</h2>
+                
+                <form id="blast-form">
+                    <!-- Query Sequence Section -->
+                    <h3>1. Sequenza Query</h3>
+                    <div class="form-group">
+                        <label for="query-seq">Inserisci la sequenza (FASTA)</label>
+                        <textarea id="query-seq" placeholder=">sequenza_1&#10;ATGCGATCGATCGATCGATCG&#10;&#10;oppure incolla il contenuto di un file FASTA" required></textarea>
+                        <small>Formati supportati: FASTA, GenBank. Lunghezza massima: 100,000 bp</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="seq-type">Tipo di Sequenza</label>
+                        <select id="seq-type" required>
+                            <option value="">-- Seleziona --</option>
+                            <option value="nucleotide" selected>Nucleotidica (DNA/RNA)</option>
+                            <option value="protein">Proteica (Aminoacidi)</option>
+                        </select>
+                        <small>Il tipo di sequenza determina il programma BLAST da usare</small>
+                    </div>
+
+                    <!-- Database Selection -->
+                    <h3>2. Database di Ricerca</h3>
+                    <div class="form-group">
+                        <label for="database">Seleziona Database</label>
+                        <select id="database" required>
+                            <option value="">-- Seleziona --</option>
+                            <option value="refseq" selected>RefSeq (Geni di riferimento)</option>
+                            <option value="genbank">GenBank (Tutte le sequenze)</option>
+                            <option value="est">EST (Espressi)</option>
+                            <option value="custom">Database Personalizzato</option>
+                        </select>
+                        <small>Scegli il database dove cercare le sequenze omologhe</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="organism">Organismo (opzionale)</label>
+                        <input type="text" id="organism" placeholder="Es. Homo sapiens, Mus musculus">
+                        <small>Limita la ricerca a un organismo specifico (autocomplete disponibile)</small>
+                    </div>
+
+                    <!-- BLAST Algorithm -->
+                    <h3>3. Parametri BLAST</h3>
+                    <div class="form-group">
+                        <label for="blast-program">Programma BLAST</label>
+                        <select id="blast-program" required>
+                            <option value="">-- Seleziona --</option>
+                            <option value="blastn" selected>BLASTN (DNA vs DNA)</option>
+                            <option value="blastx">BLASTX (DNA vs Proteine)</option>
+                            <option value="blastp">BLASTP (Proteina vs Proteina)</option>
+                            <option value="tblastn">TBLASTN (Proteina vs DNA)</option>
+                            <option value="tblastx">TBLASTX (DNA vs DNA, tradotto)</option>
+                        </select>
+                        <small>Scelto automaticamente in base al tipo di sequenza</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="evalue">E-value (soglia di significatività)</label>
+                        <select id="evalue" required>
+                            <option value="0.001" selected>Stringente (0.001)</option>
+                            <option value="0.01">Moderato (0.01)</option>
+                            <option value="0.1">Permissivo (0.1)</option>
+                            <option value="1">Molto permissivo (1)</option>
+                        </select>
+                        <small>E-value più basso = risultati più significativi</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="word-size">Word Size</label>
+                        <select id="word-size">
+                            <option value="">Automatico</option>
+                            <option value="7">7 (stringente)</option>
+                            <option value="11" selected>11 (standard)</option>
+                            <option value="15">15 (permissivo)</option>
+                        </select>
+                        <small>Lunghezza della parola per la ricerca iniziale</small>
+                    </div>
+
+                    <!-- Job Information -->
+                    <h3>4. Informazioni Lavoro</h3>
+                    <div class="form-group">
+                        <label for="job-title">Titolo del Lavoro (opzionale)</label>
+                        <input type="text" id="job-title" placeholder="Es. Ricerca omologia sequenza circRNA circXYZ">
+                        <small>Per identificare facilmente i tuoi risultati</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email (opzionale)</label>
+                        <input type="email" id="email" placeholder="tua.email@università.it">
+                        <small>Riceverai il link ai risultati al completamento</small>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">🔍 Avvia Ricerca BLAST</button>
+                        <button type="reset" class="btn-secondary">Cancella Campi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Page -->
+        <div id="results" class="page-section">
+            <div class="results-container">
+                <h2>Risultati Recenti</h2>
+                <div id="recent-results-list">
+                    <div class="empty-state">
+                        <p>Nessun risultato ancora. Esegui una ricerca BLAST.</p>
+                    </div>
+                </div>
+
+                <hr style="margin: var(--spacing-lg) 0; border: none; border-top: 1px solid var(--color-border);">
+
+                <h2 style="margin-top: var(--spacing-lg);">Risultati Dettagliati</h2>
+                <div id="detailed-results" style="display: none;">
+                    <div class="status-message info">
+                        <strong>Job ID:</strong> <span id="job-id"></span> | 
+                        <strong>Tempo di ricerca:</strong> <span id="search-time"></span>s
+                    </div>
+
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Hit</th>
+                                <th>Accession</th>
+                                <th>Description</th>
+                                <th>E-value</th>
+                                <th>Bit Score</th>
+                                <th>Identity %</th>
+                                <th>Coverage %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentation Page -->
+        <div id="documentation" class="page-section">
+            <div class="form-card">
+                <h2>Documentazione BLAST</h2>
+                
+                <h3>Cos'è BLAST?</h3>
+                <p>
+                    BLAST (Basic Local Alignment Search Tool) è uno strumento che trova regioni di similarità tra sequenze biologiche. 
+                    È uno dei più importanti nella ricerca bioinformatica per identificare sequenze omologhe, annotare nuovi geni e 
+                    scoprire funzioni proteiche.
+                </p>
+
+                <h3>Programmi BLAST Disponibili</h3>
+                <ul style="margin-left: var(--spacing-lg);">
+                    <li><strong>BLASTN:</strong> Confronta DNA con DNA - ideale per geni e sequenze genomiche</li>
+                    <li><strong>BLASTX:</strong> Confronta DNA (tradotto in proteina) con sequenze proteiche</li>
+                    <li><strong>BLASTP:</strong> Confronta proteine con proteine - per studi funzionali</li>
+                    <li><strong>TBLASTN:</strong> Confronta proteina con DNA (tradotto)</li>
+                    <li><strong>TBLASTX:</strong> Confronta DNA tradotto con DNA tradotto</li>
+                </ul>
+
+                <h3>Parametri Importanti</h3>
+                <dl style="margin-left: var(--spacing-lg);">
+                    <dt><strong>E-value:</strong></dt>
+                    <dd>Misura di significatività statistica. Un e-value basso (es. 0.001) indica alto significato biologico.</dd>
+                    
+                    <dt style="margin-top: var(--spacing-md);"><strong>Bit Score:</strong></dt>
+                    <dd>Punteggio di similarità normalizzato. Valori più alti indicano maggiore similarità.</dd>
+                    
+                    <dt style="margin-top: var(--spacing-md);"><strong>Identity %:</strong></dt>
+                    <dd>Percentuale di basi/aminoacidi identici tra le sequenze allineate.</dd>
+                    
+                    <dt style="margin-top: var(--spacing-md);"><strong>Coverage %:</strong></dt>
+                    <dd>Percentuale della tua sequenza coperta dall'allineamento.</dd>
+                </dl>
+
+                <h3>Come Interpretare i Risultati</h3>
+                <ol style="margin-left: var(--spacing-lg);">
+                    <li><strong>E-value &lt; 0.001:</strong> Molto significativo - probabilmente omologo vero</li>
+                    <li><strong>E-value 0.001-0.1:</strong> Significativo - probabile omologo</li>
+                    <li><strong>E-value &gt; 0.1:</strong> Non significativo - potrebbe essere casuale</li>
+                    <li><strong>Identity &gt; 80%:</strong> Alta similarità di sequenza</li>
+                    <li><strong>Coverage &gt; 80%:</strong> Buona copertura della tua sequenza</li>
+                </ol>
+
+                <h3>Suggerimenti</h3>
+                <ul style="margin-left: var(--spacing-lg);">
+                    <li>Verifica che la sequenza sia in formato FASTA valido</li>
+                    <li>Per ricerche iniziali, usa parametri permissivi; per conferma, usa parametri stringenti</li>
+                    <li>Consulta sempre la letteratura per validare biologicamente i risultati</li>
+                    <li>Per circRNA, considera database specializzati come circRNADb</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div>
+                <h4>BLAST</h4>
+                <p>Genome BLAST - Strumento di ricerca di sequenze</p>
+                <p>Versione 1.0 - Progetto Universitario</p>
+            </div>
+            <div>
+                <h4>Link Utili</h4>
+                <ul style="list-style: none;">
+                    <li><a href="#" onclick="alert('Link NCBI BLAST')">NCBI BLAST</a></li>
+                    <li><a href="#" onclick="alert('Link UCSC')">UCSC Genome Browser</a></li>
+                    <li><a href="#" onclick="alert('Link circRNADb')">circRNADb</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Informazioni Legali</h4>
+                <ul style="list-style: none;">
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Termini di Servizio</a></li>
+                    <li><a href="#">Contatti</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // State management
+        const appState = {
+            currentPage: 'search',
+            searches: [],
+            currentResults: null
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            setupNavigation();
+            setupFormHandlers();
+            loadRecentSearches();
+        });
+
+        // Navigation between pages
+        function setupNavigation() {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Update active button
+                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Update page section
+                    const pageId = this.dataset.page;
+                    document.querySelectorAll('.page-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    document.getElementById(pageId).classList.add('active');
+
+                    // Update breadcrumb
+                    const pageNames = {
+                        'search': 'Ricerca BLAST',
+                        'results': 'Risultati Recenti',
+                        'documentation': 'Documentazione'
+                    };
+                    document.getElementById('current-page').textContent = '/ ' + pageNames[pageId];
+                });
+            });
+        }
+
+        // Form submission
+        function setupFormHandlers() {
+            document.getElementById('blast-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // Get form values
+                const sequence = document.getElementById('query-seq').value.trim();
+                const seqType = document.getElementById('seq-type').value;
+                const database = document.getElementById('database').value;
+                const organism = document.getElementById('organism').value;
+                const evalue = document.getElementById('evalue').value;
+                const jobTitle = document.getElementById('job-title').value || 'Ricerca BLAST #' + (appState.searches.length + 1);
+
+                // Validation
+                if (!sequence) {
+                    showAlert('Errore: Inserisci una sequenza', 'error');
+                    return;
+                }
+
+                if (!seqType || !database) {
+                    showAlert('Errore: Completa tutti i campi obbligatori', 'error');
+                    return;
+                }
+
+                // Create search object
+                const search = {
+                    id: 'BLAST_' + Date.now(),
+                    title: jobTitle,
+                    seqType: seqType,
+                    database: database,
+                    organism: organism,
+                    evalue: evalue,
+                    timestamp: new Date(),
+                    sequenceLength: sequence.length,
+                    status: 'completed'
+                };
+
+                // Generate mock results
+                const results = generateMockResults(search);
+
+                // Save to state
+                appState.searches.unshift(search);
+                appState.currentResults = results;
+
+                // Show results
+                displayDetailedResults(search, results);
+
+                // Show success message
+                showAlert('Ricerca completata con successo!', 'success');
+
+                // Switch to results page
+                document.querySelectorAll('.nav-btn')[1].click();
+
+                // Update recent searches
+                loadRecentSearches();
+            });
+        }
+
+        // Generate mock BLAST results
+        function generateMockResults(search) {
+            const mockHits = [
+                {
+                    hit: 1,
+                    accession: 'NM_001234567',
+                    description: 'Homo sapiens gene XYZ variant 1 (GENEX), mRNA',
+                    evalue: 2.3e-45,
+                    bitScore: 289.4,
+                    identity: 97.5,
+                    coverage: 98.2,
+                    hspLength: 425,
+                    queryStart: 1,
+                    queryEnd: 420
+                },
+                {
+                    hit: 2,
+                    accession: 'NM_987654321',
+                    description: 'Homo sapiens gene ABC (GENEABC), mRNA',
+                    evalue: 5.2e-32,
+                    bitScore: 198.7,
+                    identity: 85.3,
+                    coverage: 92.1,
+                    hspLength: 380,
+                    queryStart: 5,
+                    queryEnd: 385
+                },
+                {
+                    hit: 3,
+                    accession: 'XM_654321987',
+                    description: 'Mus musculus gene ortholog (mGeneX), mRNA',
+                    evalue: 3.8e-28,
+                    bitScore: 165.9,
+                    identity: 82.1,
+                    coverage: 85.5,
+                    hspLength: 355,
+                    queryStart: 10,
+                    queryEnd: 365
+                },
+                {
+                    hit: 4,
+                    accession: 'NM_111222333',
+                    description: 'Predicted sequence similar to XYZ protein',
+                    evalue: 0.0001,
+                    bitScore: 95.2,
+                    identity: 71.4,
+                    coverage: 62.3,
+                    hspLength: 260,
+                    queryStart: 50,
+                    queryEnd: 310
+                }
+            ];
+
+            return mockHits;
+        }
+
+        // Display detailed results
+        function displayDetailedResults(search, results) {
+            const resultsDiv = document.getElementById('detailed-results');
+            const tbody = document.getElementById('results-tbody');
+
+            // Update job info
+            document.getElementById('job-id').textContent = search.id;
+            document.getElementById('search-time').textContent = (Math.random() * 5 + 1).toFixed(2);
+
+            // Clear and populate table
+            tbody.innerHTML = '';
+            results.forEach(hit => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${hit.hit}</strong></td>
+                    <td><a href="#" class="hit-title" title="Accession Number: ${hit.accession}">${hit.accession}</a></td>
+                    <td title="${hit.description}">${hit.description.substring(0, 50)}...</td>
+                    <td><code style="background: #f0f0f0; padding: 2px 4px; border-radius: 2px;">${hit.evalue.toExponential(2)}</code></td>
+                    <td>${hit.bitScore}</td>
+                    <td>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: ${Math.min(hit.identity, 100)}%"></div>
+                        </div>
+                        ${hit.identity.toFixed(1)}%
+                    </td>
+                    <td>${hit.coverage.toFixed(1)}%</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            resultsDiv.style.display = 'block';
+        }
+
+        // Load recent searches
+        function loadRecentSearches() {
+            const list = document.getElementById('recent-results-list');
+
+            if (appState.searches.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>Nessun risultato ancora. Esegui una ricerca BLAST.</p></div>';
+                return;
+            }
+
+            list.innerHTML = appState.searches.map(search => `
+                <div class="recent-item">
+                    <strong>${search.title}</strong>
+                    <div class="recent-item-meta">
+                        ID: ${search.id} | 
+                        Sequenza: ${search.sequenceLength} bp | 
+                        Database: ${search.database} | 
+                        ${search.timestamp.toLocaleString('it-IT')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Show alert messages
+        function showAlert(message, type) {
+            const formCard = document.querySelector('.form-card');
+            const alert = document.createElement('div');
+            alert.className = `status-message ${type}`;
+            alert.textContent = message;
+            formCard.insertBefore(alert, formCard.firstChild);
+
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        // Auto-update BLAST program based on sequence type
+        document.getElementById('seq-type').addEventListener('change', function() {
+            const programSelect = document.getElementById('blast-program');
+            if (this.value === 'nucleotide') {
+                programSelect.value = 'blastn';
+            } else {
+                programSelect.value = 'blastp';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PseudoBLAST UI - Analisi Genomica</title>
+    <style>
+        /* --- STILI DERIVATI DALLO SCRIPT 1 (DESIGN SYSTEM) --- */
+        :root {
+            --color-primary: #2185d0;
+            --color-primary-hover: #1678c2;
+            --color-success: #21a84e;
+            --color-warning: #f5a623;
+            --color-danger: #d32f2f;
+            --color-bg: #f5f5f5;
+            --color-surface: #ffffff;
+            --color-border: #e0e0e0;
+            --color-text: #212121;
+            --color-text-secondary: #666666;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --font-mono: 'Courier New', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--color-surface);
+            border-bottom: 2px solid var(--color-border);
+            padding: var(--spacing-md);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--color-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-tabs { display: flex; gap: var(--spacing-md); list-style: none; }
+        .nav-tabs button {
+            background: none; border: none; padding: var(--spacing-sm) var(--spacing-md);
+            cursor: pointer; font-size: 14px; color: var(--color-text-secondary);
+            border-bottom: 2px solid transparent; transition: all 0.3s ease;
+        }
+        .nav-tabs button.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+        .nav-tabs button:hover { color: var(--color-primary); }
+
+        /* Container & Layout */
+        .container { max-width: 1200px; margin: 0 auto; padding: var(--spacing-lg); }
+        .page-section { display: none; }
+        .page-section.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-card, .results-container {
+            background-color: var(--color-surface);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        h2 { margin-bottom: var(--spacing-md); color: var(--color-text); font-size: 20px; border-bottom: 2px solid var(--color-bg); padding-bottom: 10px; }
+        h3 { margin-top: var(--spacing-lg); margin-bottom: var(--spacing-md); color: var(--color-text); font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Form Elements */
+        .form-group { margin-bottom: var(--spacing-md); }
+        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        small { display: block; margin-top: 4px; font-size: 12px; color: var(--color-text-secondary); }
+        
+        textarea, input[type="text"], input[type="number"], select {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--color-border);
+            border-radius: 4px; font-family: inherit; font-size: 14px;
+            background-color: var(--color-surface); transition: border-color 0.3s ease;
+        }
+        textarea { font-family: var(--font-mono); min-height: 120px; resize: vertical; }
+        textarea:focus, input:focus, select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(33, 133, 208, 0.1); }
+
+        /* Mode Switcher (New feature) */
+        .mode-switcher {
+            display: flex;
+            background: var(--color-bg);
+            padding: 4px;
+            border-radius: 6px;
+            margin-bottom: var(--spacing-lg);
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            transition: all 0.2s;
+        }
+        .mode-btn.active {
+            background: var(--color-surface);
+            color: var(--color-primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Buttons */
+        .button-group { display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg); }
+        button.action-btn {
+            padding: 12px 24px; border: none; border-radius: 4px; font-size: 14px;
+            font-weight: 600; cursor: pointer; transition: all 0.3s ease; color: white;
+        }
+        .btn-search { background-color: var(--color-primary); }
+        .btn-search:hover { background-color: var(--color-primary-hover); transform: translateY(-1px); }
+        .btn-compare { background-color: var(--color-danger); } /* Colore dal secondo script per compare */
+        .btn-compare:hover { background-color: #b71c1c; transform: translateY(-1px); }
+        .btn-reset { background-color: #e0e0e0; color: var(--color-text); }
+
+        /* --- STILI PER I RISULTATI (MISTO SCRIPT 1 & 2) --- */
+        
+        /* Result Box Style (Ispirato allo script 2 ma pulito come l'1) */
+        .result-box {
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            margin-bottom: var(--spacing-md);
+            overflow: hidden;
+            background: #fff;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .result-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-color: var(--color-primary);
+        }
+
+        .result-header {
+            background-color: #f8f9fa;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-info { font-weight: 600; color: var(--color-text); font-size: 14px; }
+        .pos-badge { 
+            background: #e3f2fd; color: var(--color-primary); 
+            padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 8px; border: 1px solid #bbdefb;
+        }
+        .score-tag {
+            background: var(--color-success); color: white;
+            padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;
+        }
+
+        /* Alignment Display (Cuore dello script 2) */
+        .seq-container {
+            padding: 16px;
+            background-color: #ffffff;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            overflow-x: auto;
+        }
+        .seq-row { display: flex; margin-bottom: 4px; }
+        .seq-label { 
+            width: 30px; color: var(--color-text-secondary); 
+            font-weight: bold; user-select: none; border-right: 1px solid #ddd; margin-right: 10px;
+        }
+        .seq-data { letter-spacing: 2px; }
+        .match { color: var(--color-success); font-weight: bold; }
+        .mismatch { color: var(--color-danger); }
+        .gap { color: var(--color-text-secondary); }
+
+        /* Status Messages */
+        .status-message { padding: 12px; border-radius: 4px; margin-bottom: 16px; font-size: 14px; }
+        .status-message.success { background-color: #e8f5e9; color: var(--color-success); border-left: 4px solid var(--color-success); }
+        .status-message.error { background-color: #ffebee; color: var(--color-danger); border-left: 4px solid var(--color-danger); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; gap: 10px; }
+            .button-group { flex-direction: column; }
+            .mode-switcher { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span style="font-size: 28px;">🧬</span> PseudoBLAST UI
+            </div>
+            <ul class="nav-tabs">
+                <li><button class="nav-btn active" data-page="search">Analisi</button></li>
+                <li><button class="nav-btn" data-page="results">Risultati</button></li>
+                <li><button class="nav-btn" data-page="docs">Info</button></li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <div id="search" class="page-section active">
+            <div class="form-card">
+                <h2>Configurazione Analisi</h2>
+                
+                <div class="mode-switcher">
+                    <button type="button" class="mode-btn active" onclick="setMode('sequence')">🔍 Cerca Sequenza (Query)</button>
+                    <button type="button" class="mode-btn" onclick="setMode('genome')">⚔️ Confronta Genomi</button>
+                </div>
+
+                <form id="analysis-form">
+                    
+                    <div class="row" style="display: flex; gap: 20px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Min Score (Soglia)</label>
+                            <input type="number" id="min-score" value="20" min="0">
+                            <small>Punteggio minimo per considerare l'allineamento valido</small>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>K-mer (Indexing)</label>
+                            <input type="number" id="k-mer" value="10" min="2">
+                            <small>Lunghezza della sottosequenza per l'indicizzazione veloce</small>
+                        </div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid var(--color-border); margin: 20px 0;">
+
+                    <div id="mode-sequence-fields">
+                        <h3>1. Definisci Query</h3>
+                        <div class="form-group">
+                            <label for="query-seq">Sequenza DNA (Query)</label>
+                            <textarea id="query-seq" placeholder=">Input_Sequence&#10;ATGCGTACGTAGCTAGCTAGCT..."></textarea>
+                            <small>Inserisci la sequenza nucleotidica grezza o in formato FASTA</small>
+                        </div>
+
+                        <h3>2. Seleziona Target</h3>
+                        <div class="form-group">
+                            <label for="target-genome">Specie Target</label>
+                            <select id="target-genome">
+                                <option value="">-- Seleziona --</option>
+                                <option value="Homo_sapiens">Homo sapiens (Umano)</option>
+                                <option value="Mus_musculus">Mus musculus (Topo)</option>
+                                <option value="Drosophila_melanogaster">Drosophila melanogaster</option>
+                                <option value="E_coli">Escherichia coli</option>
+                                <option value="S_cerevisiae">Saccharomyces cerevisiae</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="mode-genome-fields" style="display: none;">
+                        <h3>Confronto Intero Genoma</h3>
+                        <div class="form-group">
+                            <label>Genoma A (Query)</label>
+                            <select id="genome-a">
+                                <option value="Homo_sapiens">Homo sapiens</option>
+                                <option value="Mus_musculus">Mus musculus</option>
+                                <option value="E_coli">Escherichia coli</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Genoma B (Subject)</label>
+                            <select id="genome-b">
+                                <option value="Mus_musculus" selected>Mus musculus</option>
+                                <option value="Homo_sapiens">Homo sapiens</option>
+                                <option value="E_coli">Escherichia coli</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" id="submit-btn" class="action-btn btn-search">Avvia Ricerca</button>
+                        <button type="reset" class="action-btn btn-reset">Cancella</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <div id="results" class="page-section">
+            <div class="results-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Risultati Analisi</h2>
+                    <span id="result-stats" style="color: var(--color-text-secondary); font-size: 14px;"></span>
+                </div>
+                
+                <div id="results-output">
+                    <div class="status-message" style="background: #f9f9f9; text-align: center; color: #888;">
+                        <p style="font-size: 40px; margin-bottom: 10px;">🧬</p>
+                        <p>Nessuna analisi eseguita.</p>
+                        <p>Vai alla tab "Analisi" per iniziare.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="docs" class="page-section">
+            <div class="form-card">
+                <h2>Documentazione PseudoBLAST</h2>
+                <p>Questo strumento combina l'interfaccia utente moderna con la logica di allineamento locale personalizzata.</p>
+                
+                <h3>Funzionalità (dallo Script 2)</h3>
+                <ul>
+                    <li><strong>Cerca Sequenza:</strong> Allinea una sequenza input (Query) contro un genoma preselezionato.</li>
+                    <li><strong>Confronta Genomi:</strong> Esegue un confronto massivo tra due genomi selezionati.</li>
+                    <li><strong>K-mer Indexing:</strong> Utilizza sottostringhe di lunghezza K per velocizzare la ricerca iniziale.</li>
+                </ul>
+
+                <h3>Interpretazione Risultati</h3>
+                <div class="result-box" style="margin-top: 15px;">
+                    <div class="result-header">
+                        <div>
+                            <strong>Esempio Header</strong> <span class="pos-badge">Pos 1200</span>
+                        </div>
+                        <span class="score-tag">Score: 45</span>
+                    </div>
+                    <div class="seq-container">
+                        <div class="seq-row">
+                            <div class="seq-label">Q:</div>
+                            <div class="seq-data"><span class="match">A</span><span class="match">T</span><span class="mismatch">C</span><span class="match">G</span></div>
+                        </div>
+                        <div class="seq-row">
+                            <div class="seq-label">S:</div>
+                            <div class="seq-data"><span class="match">A</span><span class="match">T</span><span class="mismatch">T</span><span class="match">G</span></div>
+                        </div>
+                    </div>
+                </div>
+                <p><small>Verde = Match, Rosso = Mismatch.</small></p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- LOGICA APPLICAZIONE ---
+
+        // Stato corrente
+        let currentMode = 'sequence';
+
+        // Navigazione Tab
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // UI Update
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Section Switch
+                const targetId = this.dataset.page;
+                document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+                document.getElementById(targetId).classList.add('active');
+            });
+        });
+
+        // Gestione Modalità (Sequenza vs Genomi)
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Aggiorna bottoni
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Mostra campi corretti
+            if (mode === 'sequence') {
+                document.getElementById('mode-sequence-fields').style.display = 'block';
+                document.getElementById('mode-genome-fields').style.display = 'none';
+                
+                // Stile bottone submit (Blu)
+                const btn = document.getElementById('submit-btn');
+                btn.textContent = 'Avvia Ricerca Sequenza';
+                btn.className = 'action-btn btn-search';
+            } else {
+                document.getElementById('mode-sequence-fields').style.display = 'none';
+                document.getElementById('mode-genome-fields').style.display = 'block';
+                
+                // Stile bottone submit (Rosso/Danger come script 2)
+                const btn = document.getElementById('submit-btn');
+                btn.textContent = 'Confronta Interi Genomi';
+                btn.className = 'action-btn btn-compare';
+            }
+        }
+
+        // Form Submit Handler
+        document.getElementById('analysis-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Validazione base
+            const minScore = document.getElementById('min-score').value;
+            
+            // Simulazione Loading
+            const btn = document.getElementById('submit-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Elaborazione in corso...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                // Genera risultati mock basati sulla modalità
+                const results = generateMockResults(currentMode, minScore);
+                renderResults(results);
+
+                // Reset Bottone e vai ai risultati
+                btn.textContent = originalText;
+                btn.disabled = false;
+                document.querySelector('[data-page="results"]').click();
+            }, 1500);
+        });
+
+        // Funzione per generare dati finti (Simulazione Backend Python Script 2)
+        function generateMockResults(mode, minThreshold) {
+            const results = [];
+            const count = Math.floor(Math.random() * 5) + 3; // 3 to 8 results
+
+            for (let i = 0; i < count; i++) {
+                const score = Math.floor(Math.random() * 50) + parseInt(minThreshold);
+                const pos = Math.floor(Math.random() * 100000);
+                
+                // Creiamo sequenze allineate random
+                const bases = ['A', 'C', 'G', 'T'];
+                let q_aln = "";
+                let s_aln = "";
+                
+                for(let j=0; j<20; j++) {
+                    const b = bases[Math.floor(Math.random() * 4)];
+                    q_aln += b;
+                    // 80% chance match
+                    s_aln += (Math.random() > 0.2) ? b : bases[Math.floor(Math.random() * 4)];
+                }
+
+                if (mode === 'sequence') {
+                    results.push({
+                        type: 'seq',
+                        header: document.getElementById('query-seq').value.split('\n')[0] || '>Query_Manual',
+                        file: document.getElementById('target-genome').value,
+                        pos: pos,
+                        score: score,
+                        q_aln: q_aln,
+                        s_aln: s_aln
+                    });
+                } else {
+                    results.push({
+                        type: 'genome',
+                        fileA: document.getElementById('genome-a').value,
+                        fileB: document.getElementById('genome-b').value,
+                        posA: pos,
+                        posB: Math.floor(Math.random() * 100000),
+                        score: score,
+                        q_aln: q_aln,
+                        s_aln: s_aln
+                    });
+                }
+            }
+            return results.sort((a,b) => b.score - a.score);
+        }
+
+        // Rendering dei risultati (Stile box Script 2 con CSS Script 1)
+        function renderResults(data) {
+            const container = document.getElementById('results-output');
+            const stats = document.getElementById('result-stats');
+            container.innerHTML = '';
+            
+            stats.textContent = `${data.length} allineamenti trovati sopra la soglia.`;
+
+            if (data.length === 0) {
+                container.innerHTML = '<div class="status-message error">Nessun risultato trovato con i parametri attuali.</div>';
+                return;
+            }
+
+            // Aggiungi Alert di successo (Style Script 1)
+            const alert = document.createElement('div');
+            alert.className = 'status-message success';
+            alert.innerHTML = `<strong>Analisi Completata!</strong> Modalità: ${currentMode === 'sequence' ? 'Sequenza vs Genoma' : 'Genoma vs Genoma'}`;
+            container.appendChild(alert);
+
+            // Genera i box (Logic Script 2 HTML structure inside Script 1 container)
+            data.forEach(r => {
+                const box = document.createElement('div');
+                box.className = 'result-box';
+
+                // Costruisci header in base al tipo
+                let headerHtml = '';
+                if (r.type === 'seq') {
+                    headerHtml = `
+                        <div>
+                            <strong>${r.header}</strong> 
+                            <div style="font-size:12px; color:#666; margin-top:4px;">
+                                Target: ${r.file} <span class="pos-badge">Pos ${r.pos}</span>
+                            </div>
+                        </div>`;
+                } else {
+                    headerHtml = `
+                        <div>
+                            <strong>${r.fileA}</strong> <span class="pos-badge">Pos ${r.posA}</span>
+                            <span style="margin: 0 8px; color:#999;">↔</span>
+                            <strong>${r.fileB}</strong> <span class="pos-badge">Pos ${r.posB}</span>
+                        </div>`;
+                }
+
+                // Genera HTML colorato per le sequenze
+                const coloredSeqQ = highlightDiff(r.q_aln, r.s_aln, 'q');
+                const coloredSeqS = highlightDiff(r.q_aln, r.s_aln, 's');
+
+                box.innerHTML = `
+                    <div class="result-header">
+                        ${headerHtml}
+                        <span class="score-tag">Score: ${r.score}</span>
+                    </div>
+                    <div class="seq-container">
+                        <div class="seq-row">
+                            <div class="seq-label">Q:</div>
+                            <div class="seq-data">${coloredSeqQ}</div>
+                        </div>
+                        <div class="seq-row">
+                            <div class="seq-label">S:</div>
+                            <div class="seq-data">${coloredSeqS}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(box);
+            });
+        }
+
+        // Helper per colorare i match/mismatch (Logica visiva)
+        function highlightDiff(seq1, seq2, target) {
+            let html = '';
+            for (let i = 0; i < seq1.length; i++) {
+                const char = target === 'q' ? seq1[i] : seq2[i];
+                if (seq1[i] === seq2[i]) {
+                    html += `<span class="match">${char}</span>`;
+                } else {
+                    html += `<span class="mismatch">${char}</span>`;
+                }
+            }
+            return html;
+        }
+
+    </script>
+</body>
+</html>
