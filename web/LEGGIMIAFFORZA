@@ -1,0 +1,12 @@
+in /template e /static i file html e css per la parte front-end sono rinominati male!!! 
+
+Per provare il codice scelto rinominate il codice bene ad esempio:
+
+"index.htmlio" --> "index.html"
+
+"style.cssi" --> "style.css"
+
+al momento (11/12/2025) c'è solo un file in templates che funziona, e con quello c'è scritto pure css.
+
+Sarebbe perferibile farli in due file diversi come per le cartelle
+
